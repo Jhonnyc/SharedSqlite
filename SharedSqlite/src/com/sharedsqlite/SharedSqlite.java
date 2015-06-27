@@ -10,10 +10,10 @@ import android.util.Log;
 
 public class SharedSqlite extends SQLiteOpenHelper {
 
-	// Class Variables
+	// Class variables
 	private final String TAG = SharedSqlite.class.getSimpleName();
 	
-	// Database Name, Version and Table
+	// Database name version and table name
 	private static final String DATABASE_COMMON_DATA = "shared_values_database";
 	private static final String TABLE_COMMON_DATA = "shared_values_table";
 	private static final int DATABASE_VERSION = 1;
