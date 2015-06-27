@@ -1,7 +1,7 @@
 <h2>Requirements</h2>
  The Library requires Android SDK version 8 and higher.
 
-LICENSE - 
+<h2>LICENSE - </h2>
 The MIT License (MIT)
 
 Copyright (c) 2015 Johnnyc
