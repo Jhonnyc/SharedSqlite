@@ -1,5 +1,5 @@
 <h2>Requirements</h2>
- The Library requires Android SDK version 8 and higher.
+ The Library requires Android SDK version 8 (Froyo) and higher.
 
 <h2>License</h2>
 <pre>
