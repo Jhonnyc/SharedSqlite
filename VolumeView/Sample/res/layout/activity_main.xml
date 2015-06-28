@@ -1,0 +1,104 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <RelativeLayout
+        android:id="@+id/triangleContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <com.volumeview.VolumeView
+            android:id="@+id/volume"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            app:bar_size="10"
+            app:empty_color="@android:color/white"
+            app:filled_bars="1"
+            app:filled_color="@color/yellow"
+            app:layoutStyle="triangle"
+            app:number_of_bars="20"
+            app:seperator_size="1" />
+
+        <Button
+            android:id="@+id/volumeDown"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_below="@id/volume"
+            android:text="-" />
+
+        <Button
+            android:id="@+id/volumeUp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_below="@id/volume"
+            android:layout_toRightOf="@id/volumeDown"
+            android:text="+" />
+
+        <EditText
+            android:id="@+id/volumeLvl"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_below="@id/volume"
+            android:layout_toRightOf="@id/volumeUp" />
+
+        <Button
+            android:id="@+id/setVolume"
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:layout_below="@id/volume"
+            android:layout_toRightOf="@id/volumeLvl"
+            android:text="SET" />
+    </RelativeLayout>
+    
+    <RelativeLayout
+        android:id="@+id/flatContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/triangleContainer" >
+
+        <com.volumeview.VolumeView
+            android:id="@+id/volume1"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            app:bar_size="10"
+            app:empty_color="@android:color/white"
+            app:filled_bars="1"
+            app:filled_color="@color/yellow"
+            app:layoutStyle="flat"
+            app:number_of_bars="20"
+            app:seperator_size="1" />
+
+        <Button
+            android:id="@+id/volumeDown1"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_below="@id/volume1"
+            android:text="-" />
+
+        <Button
+            android:id="@+id/volumeUp1"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_below="@id/volume1"
+            android:layout_toRightOf="@id/volumeDown1"
+            android:text="+" />
+
+        <EditText
+            android:id="@+id/volumeLvl1"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_below="@id/volume1"
+            android:layout_toRightOf="@id/volumeUp1" />
+
+        <Button
+            android:id="@+id/setVolume1"
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:layout_below="@id/volume1"
+            android:layout_toRightOf="@id/volumeLvl1"
+            android:text="SET" />
+    </RelativeLayout>
+
+</RelativeLayout>
