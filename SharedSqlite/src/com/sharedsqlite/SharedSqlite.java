@@ -57,8 +57,8 @@ public class SharedSqlite extends SQLiteOpenHelper {
 	public void onCreate(SQLiteDatabase db) {
 
 		CREATE_COMMON_DATA_TABLE = "CREATE TABLE IF NOT EXISTS "
-				+ TABLE_COMMON_DATA 
-				+ " (" + COLUMN_DATA_KEY + " TEXT PRIMARY KEY NOT NULL, "
+				+ TABLE_COMMON_DATA + " (" 
+				+ COLUMN_DATA_KEY + " TEXT PRIMARY KEY NOT NULL, "
 				+ COLUMN_DATA_VALUE + " TEXT NOT NULL);";
 
 		// create the tables
@@ -74,7 +74,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 
 	/*
 	 * A private method used to add a row to the table in case it does not exists
-	 * Or create a new row in case it does exist in the database
+	 * Or update a row value in case it exist in the database
 	 */
 	private boolean addOrUpdate(String dataKey, String value) {
 
@@ -96,9 +96,13 @@ public class SharedSqlite extends SQLiteOpenHelper {
 		} catch (SQLException exception) {
 			Log.e(TAG, exception.getMessage());
 		} finally {
-			if (db != null) {
-				// close database connection
-				db.close();
+			try {
+				if (db != null) {
+					// close database connection
+					db.close();
+				} 
+			} catch (SQLException exception) {
+				Log.e(TAG, exception.getMessage());
 			}
 		}
 		return pass;
@@ -131,7 +135,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 		// method variables
 		int columnIndex;
 		String value = defaultValue;
-		Cursor cursor;
+		Cursor cursor = null;
 		SQLiteDatabase db = null;
 
 		// attempt to get the active cigarette id from the database
@@ -151,8 +155,17 @@ public class SharedSqlite extends SQLiteOpenHelper {
 		} catch (SQLException exception) {
 			Log.e(TAG, exception.getMessage());
 		} finally {
-			if (db != null) {
-				db.close();
+			try {
+				if(cursor != null) {
+					if(!cursor.isClosed()) {
+						cursor.close();
+					}
+				}
+				if (db != null) {
+					db.close();
+				}
+			} catch (Exception exception) {
+				Log.e(TAG, exception.getMessage());
 			}
 		}
 		return value;
