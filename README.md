@@ -27,3 +27,5 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 </code>
 </pre>
+
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-SharedSqlite-green.svg?style=flat)](https://android-arsenal.com/details/1/2053)
