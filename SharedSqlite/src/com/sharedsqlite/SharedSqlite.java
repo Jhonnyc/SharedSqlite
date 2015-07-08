@@ -1,35 +1,42 @@
 package com.sharedsqlite;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.provider.BaseColumns;
 import android.util.Log;
 
-public class SharedSqlite extends SQLiteOpenHelper {
+public class SharedSqlite {
 
-	// Class variables
-	private final String TAG = SharedSqlite.class.getSimpleName();
-	
-	// Database name version and table name
-	private static final String DATABASE_COMMON_DATA = "shared_values_database";
-	private static final String TABLE_COMMON_DATA = "shared_values_table";
-	private static final int DATABASE_VERSION = 1;
+	// Private variables
+	private static final String TAG = SharedSqlite.class.getSimpleName();
 
-	// Tables and table columns names
-	private String CREATE_COMMON_DATA_TABLE;
-	private static final String COLUMN_DATA_KEY = "key";
-	private static final String COLUMN_DATA_VALUE = "value";
+	// Class Variables
+	private AtomicInteger mOpenCounter = new AtomicInteger();
+    private static SQLiteOpenHelper mDatabaseHelper;
 	private static SharedSqlite mInstance = null;
+	private SQLiteDatabase mDatabase;
+	
+	public static abstract class DatabaseEntry implements BaseColumns {
+		public static final String TABLE_COMMON_DATA = "shared_values_table";
+		public static final String COLUMN_DATA_KEY = "key";
+		public static final String COLUMN_DATA_VALUE = "value";
+    }
 	
 	/**
 	 * A static method to initialize a new instance of a SharedSqlite class
 	 * @param context A context object to create a new SharedSqlite class
 	 */
-	public static void initialize(Context context) {
-		mInstance = new SharedSqlite(context);
+	public synchronized static void initialize(Context context) {
+		if(mInstance == null) {
+			mInstance = new SharedSqlite();
+			mDatabaseHelper = new SharedSqliteDatabase(context);
+		}
 	}
 	
 	/**
@@ -47,32 +54,30 @@ public class SharedSqlite extends SQLiteOpenHelper {
 	}
 
 	/*
-	 * A private class constructor
+	 * Open the database for read and increment the counter of readers by one
+	 * And return a writable SQLiteDatabase object
 	 */
-	private SharedSqlite(Context context) {
-		super(context, DATABASE_COMMON_DATA, null, DATABASE_VERSION);
-	}
+    private synchronized SQLiteDatabase openDatabase() {
+        if(mOpenCounter.incrementAndGet() == 1) {
+            // Opening new database
+            mDatabase = mDatabaseHelper.getWritableDatabase();
+        }
+        return mDatabase;
+    }
 
-	@Override
-	public void onCreate(SQLiteDatabase db) {
+    /*
+     * Close the database in case all the pointers to it are 'gone'
+     * that is openCounter value is 0
+     */
+    private synchronized void closeDatabase() {
+        if(mOpenCounter.decrementAndGet() == 0) {
+            // Closing database
+            mDatabase.close();
 
-		CREATE_COMMON_DATA_TABLE = "CREATE TABLE IF NOT EXISTS "
-				+ TABLE_COMMON_DATA + " (" 
-				+ COLUMN_DATA_KEY + " TEXT PRIMARY KEY NOT NULL, "
-				+ COLUMN_DATA_VALUE + " TEXT NOT NULL);";
+        }
+    }
 
-		// create the tables
-		db.execSQL(CREATE_COMMON_DATA_TABLE);
-	}
-
-	@Override
-	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		// Drop older table if existed
-		db.execSQL("DROP TABLE IF EXISTS " + TABLE_COMMON_DATA);
-		onCreate(db);
-	}
-
-	/*
+    /*
 	 * A private method used to add a row to the table in case it does not exists
 	 * Or update a row value in case it exist in the database
 	 */
@@ -85,11 +90,11 @@ public class SharedSqlite extends SQLiteOpenHelper {
 		ContentValues row = null;
 
 		try {
-			db = getWritableDatabase();
+			db = getInstance().openDatabase();
 			row = new ContentValues();
-			row.put(COLUMN_DATA_KEY, dataKey);
-			row.put(COLUMN_DATA_VALUE, value);
-			rowId = db.insertWithOnConflict(TABLE_COMMON_DATA, null, row, SQLiteDatabase.CONFLICT_REPLACE);
+			row.put(DatabaseEntry.COLUMN_DATA_KEY, dataKey);
+			row.put(DatabaseEntry.COLUMN_DATA_VALUE, value);
+			rowId = db.insertWithOnConflict(DatabaseEntry.TABLE_COMMON_DATA, null, row, SQLiteDatabase.CONFLICT_REPLACE);
 			if(rowId > -1) {
 				pass = true;
 			}
@@ -99,7 +104,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 			try {
 				if (db != null) {
 					// close database connection
-					db.close();
+					getInstance().closeDatabase();
 				} 
 			} catch (SQLException exception) {
 				Log.e(TAG, exception.getMessage());
@@ -116,7 +121,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 	 * @param value The data to be stored
 	 * @return True in case the row added successfully False otherwise
 	 */
-	public <T, S> boolean addValue(T dataKey, S value) {
+	public <K, V> boolean addValue(K dataKey, V value) {
 		boolean pass = addOrUpdate(String.valueOf(dataKey), String.valueOf(value));
 		return pass;
 	}
@@ -131,7 +136,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 	 * @return A String value associated with the given key or the defaultValue in 
 	 * Case there is no such mapping
 	 */
-	public <T> String getStringValue(T dataKey, String defaultValue) {
+	public <K> String getStringValue(K dataKey, String defaultValue) {
 		// method variables
 		int columnIndex;
 		String value = defaultValue;
@@ -140,13 +145,13 @@ public class SharedSqlite extends SQLiteOpenHelper {
 
 		// attempt to get the active cigarette id from the database
 		try {
-			db = getWritableDatabase();
-			cursor = db.query(TABLE_COMMON_DATA, null,
-					COLUMN_DATA_KEY + " = ?", new String[] { String.valueOf(dataKey) },
+			db = getInstance().openDatabase();
+			cursor = db.query(DatabaseEntry.TABLE_COMMON_DATA, null,
+					DatabaseEntry.COLUMN_DATA_KEY + " = ?", new String[] { String.valueOf(dataKey) },
 					null, null, null);
 			if (cursor != null) {
 				if (cursor.moveToFirst()) {
-					columnIndex = cursor.getColumnIndex(COLUMN_DATA_VALUE);
+					columnIndex = cursor.getColumnIndex(DatabaseEntry.COLUMN_DATA_VALUE);
 					if (columnIndex > -1) {
 						value = cursor.getString(columnIndex);
 					}
@@ -162,7 +167,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 					}
 				}
 				if (db != null) {
-					db.close();
+					getInstance().closeDatabase();
 				}
 			} catch (Exception exception) {
 				Log.e(TAG, exception.getMessage());
@@ -181,7 +186,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 	 * @return A Integer value associated with the given key or the defaultValue in 
 	 * Case there is no such mapping
 	 */
-	public <T> Integer getIntValue(T dataKey, Integer defaultValue) {
+	public <K> Integer getIntValue(K dataKey, Integer defaultValue) {
 		Integer value = defaultValue;
 		String stringValue = getStringValue(dataKey, null);
 		if (stringValue != null) {
@@ -202,7 +207,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 	 * @return A Long value associated with the given key or the defaultValue in 
 	 * Case there is no such mapping
 	 */
-	public <T> Long getLongValue(T dataKey, Long defaultValue) {
+	public <K> Long getLongValue(K dataKey, Long defaultValue) {
 		Long value = defaultValue;
 		String stringValue = getStringValue(dataKey, null);
 		if (stringValue != null) {
@@ -223,7 +228,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 	 * @return A Double value associated with the given key or the defaultValue in 
 	 * Case there is no such mapping
 	 */
-	public <T> Double getDoubleValue(T dataKey, Double defaultValue) {
+	public <K> Double getDoubleValue(K dataKey, Double defaultValue) {
 		Double value = defaultValue;
 		String stringValue = getStringValue(dataKey, null);
 		if (stringValue != null) {
@@ -244,7 +249,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 	 * @return A Float value associated with the given key or the defaultValue in 
 	 * Case there is no such mapping
 	 */
-	public <T> Float getFloatValue(T dataKey, Float defaultValue) {
+	public <K> Float getFloatValue(K dataKey, Float defaultValue) {
 		Float value = defaultValue;
 		String stringValue = getStringValue(dataKey, null);
 		if (stringValue != null) {
@@ -265,7 +270,7 @@ public class SharedSqlite extends SQLiteOpenHelper {
 	 * @return A Boolean value associated with the given key or the defaultValue in 
 	 * Case there is no such mapping
 	 */
-	public <T> Boolean getBooleanValue(T dataKey, Boolean defaultValue) {
+	public <K> Boolean getBooleanValue(K dataKey, Boolean defaultValue) {
 		Boolean value = defaultValue;
 		String stringValue = getStringValue(dataKey, null);
 		if (stringValue != null) {
