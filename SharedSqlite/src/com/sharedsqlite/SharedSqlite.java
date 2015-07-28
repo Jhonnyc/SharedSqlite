@@ -92,12 +92,27 @@ public class SharedSqlite {
 		try {
 			db = getInstance().openDatabase();
 			row = new ContentValues();
-			row.put(DatabaseEntry.COLUMN_DATA_KEY, dataKey);
-			row.put(DatabaseEntry.COLUMN_DATA_VALUE, value);
-			rowId = db.insertWithOnConflict(DatabaseEntry.TABLE_COMMON_DATA, null, row, SQLiteDatabase.CONFLICT_REPLACE);
-			if(rowId > -1) {
-				pass = true;
+			if(getStringValue(dataKey, null) != null) {
+				row.put(DatabaseEntry.COLUMN_DATA_VALUE, value);
+				rowId = db.update(DatabaseEntry.TABLE_COMMON_DATA, row, DatabaseEntry.COLUMN_DATA_KEY + "='"+dataKey+"'", null);
+				if(rowId > -1) {
+					pass = true;
+				}
+			} else {
+				row.put(DatabaseEntry.COLUMN_DATA_KEY, dataKey);
+				row.put(DatabaseEntry.COLUMN_DATA_VALUE, value);
+				rowId = db.insertWithOnConflict(DatabaseEntry.TABLE_COMMON_DATA, null, row, SQLiteDatabase.CONFLICT_REPLACE);
+				if(rowId > -1) {
+					pass = true;
+				}
 			}
+//			row = new ContentValues();
+//			row.put(DatabaseEntry.COLUMN_DATA_KEY, dataKey);
+//			row.put(DatabaseEntry.COLUMN_DATA_VALUE, value);
+//			rowId = db.insertWithOnConflict(DatabaseEntry.TABLE_COMMON_DATA, null, row, SQLiteDatabase.CONFLICT_REPLACE);
+//			if(rowId > -1) {
+//				pass = true;
+//			}
 		} catch (SQLException exception) {
 			Log.e(TAG, exception.getMessage());
 		} finally {
