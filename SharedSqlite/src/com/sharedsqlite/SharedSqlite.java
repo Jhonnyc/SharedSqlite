@@ -295,4 +295,32 @@ public class SharedSqlite {
 		}
 		return value;
 	}
+	
+	/**
+	 * A method to reset the database and clear any last saved value
+	 * @return True in case the entire data got erased
+	 */
+	public boolean reset() {
+		int rowsDeleted;
+		int totalRows;
+		Cursor cursor;
+		boolean pass = false;
+		SQLiteDatabase db = null;
+		try {
+			db = openDatabase();
+			cursor = db.query(DatabaseEntry.TABLE_COMMON_DATA, null, null, null, null, null, null);
+			totalRows = cursor.getCount();
+			rowsDeleted = db.delete(DatabaseEntry.TABLE_COMMON_DATA, null, null);
+			pass = rowsDeleted == totalRows;
+		} catch (SQLException exception) {
+			pass = false;
+			Log.e(TAG, exception.getMessage());
+		} finally {
+			if (db != null) {
+				// close database connection
+				closeDatabase();
+			}
+		}
+		return pass;
+	}
 }
