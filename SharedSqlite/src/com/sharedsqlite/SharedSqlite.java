@@ -138,6 +138,27 @@ public class SharedSqlite {
 		}
 		return pass;
 	}
+	
+	public <V> boolean deleteValue(V value) {
+		int rowsDeleted;
+		boolean pass = false;
+		SQLiteDatabase db = null;
+		try {
+			db = getInstance().openDatabase();
+			rowsDeleted = db.delete(DatabaseEntry.TABLE_COMMON_DATA, DatabaseEntry.COLUMN_DATA_KEY+"=?", 
+					new String[] {String.valueOf(value)});
+			pass = (rowsDeleted == 1);
+		} catch (SQLException exception) {
+			pass = false;
+			Log.e(TAG, exception.getMessage());
+		} finally {
+			if (db != null) {
+				// close database connection
+				getInstance().closeDatabase();
+			}
+		}
+		return pass;
+	}
 
 	/**
 	 * A method to add a new row to the database. The data will be added as a
