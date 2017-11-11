@@ -1,3 +1,6 @@
+<h2>Usage</h2>
+ A library to ease the use of android's persistent data storage.
+
 <h2>Requirements</h2>
  The Library requires Android SDK version 8 (Froyo) and higher.
 
