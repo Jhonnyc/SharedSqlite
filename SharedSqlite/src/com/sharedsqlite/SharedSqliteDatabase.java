@@ -7,7 +7,7 @@ import com.sharedsqlite.SharedSqlite.DatabaseEntry;
 
 public class SharedSqliteDatabase extends SQLiteOpenHelper {
 
-	// Database name version and table name
+	// DB name, DB version and table name
 	private static final int DATABASE_VERSION = 1;
 	private static final String DATABASE_COMMON_DATA = "shared_values_database";
 
